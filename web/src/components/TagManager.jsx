@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import Modal from './Modal.jsx';
+import { CATEGORY_ORDER, CATEGORY_LABELS } from '../categories.js';
 
 export default function TagManager({ onClose, onChanged }) {
   const [tags, setTags] = useState([]);
@@ -108,7 +109,22 @@ export default function TagManager({ onClose, onChanged }) {
                   </button>
                 </>
               ) : (
-                <div className="row-actions">
+                <>
+                  <select
+                    className="cat-select"
+                    title="Subcategory"
+                    value={tag.category || ''}
+                    disabled={busy}
+                    onChange={(e) => run(() => api.setTagCategory(tag.id, e.target.value || null))}
+                  >
+                    <option value="">— none —</option>
+                    {CATEGORY_ORDER.map((c) => (
+                      <option key={c} value={c}>
+                        {CATEGORY_LABELS[c]}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="row-actions">
                   <button className="icon-btn" title="Rename" onClick={() => startRename(tag)}>
                     <PencilIcon />
                   </button>
@@ -130,7 +146,8 @@ export default function TagManager({ onClose, onChanged }) {
                   >
                     <TrashIcon />
                   </button>
-                </div>
+                  </div>
+                </>
               )}
             </div>
           ))}

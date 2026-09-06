@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { sectionLabel } from '../sections.js';
 
 export default function MasonryGrid({ items }) {
   return (
@@ -6,6 +7,7 @@ export default function MasonryGrid({ items }) {
       {items.map((item) => (
         <Link key={item.id} to={`/item/${item.id}`} className="card">
           <figure>
+            {item.section && <span className="card-section">{sectionLabel(item.section)}</span>}
             <img src={`/uploads/${item.image_path}`} alt={item.description || 'Design reference'} loading="lazy" />
             <figcaption className="caption">
               <p className={item.description ? '' : 'placeholder'}>

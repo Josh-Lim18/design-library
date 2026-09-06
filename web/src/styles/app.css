@@ -278,6 +278,63 @@ a {
   font-size: 13px;
   color: var(--text-faint);
 }
+.tag-group + .tag-group {
+  margin-top: 10px;
+}
+.tag-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 650;
+  color: var(--text-faint);
+  padding: 4px 8px 3px;
+}
+
+/* ============================================================ Aesthetic bar */
+.stylebar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+}
+.stylebar-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-weight: 650;
+  margin-right: 3px;
+}
+.style-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+.style-chip:hover {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
+.style-chip.is-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.style-chip .c {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+.style-chip.is-on .c {
+  color: color-mix(in srgb, var(--accent-text) 75%, transparent);
+}
 
 /* ============================================================ Filter bar */
 .filterbar {
@@ -360,12 +417,28 @@ a {
   display: block;
 }
 .card figure {
+  position: relative;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--bg-sunken);
   box-shadow: var(--shadow-sm);
   transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.card-section {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(20, 18, 15, 0.72);
+  backdrop-filter: blur(3px);
+  padding: 3px 7px;
+  border-radius: 5px;
 }
 .card:hover figure {
   transform: translateY(-3px);
@@ -514,6 +587,37 @@ a {
   border-color: var(--text-faint);
   color: var(--text);
 }
+.tag-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tag-cat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 650;
+  color: var(--text-faint);
+  margin-bottom: 5px;
+}
+.manager-row .cat-select {
+  max-width: 124px;
+  color: var(--text-soft);
+}
+.detail .section-pill {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--text-soft);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+.detail .section-pill:hover {
+  border-color: var(--text-faint);
+  color: var(--text);
+}
 .detail .source {
   font-size: 13.5px;
   color: var(--accent);
@@ -633,6 +737,35 @@ textarea.input {
   font-size: 12px;
   color: var(--text-faint);
   margin-top: 5px;
+}
+.hint code,
+label.control--inline code {
+  font-size: 0.9em;
+  padding: 1px 4px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+label.control--inline {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+label.control--inline > span {
+  display: block;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 450;
+  color: var(--text-faint);
+}
+label.control--inline input[type='checkbox'] {
+  margin-top: 2px;
+  flex: none;
 }
 
 /* Dropzone */

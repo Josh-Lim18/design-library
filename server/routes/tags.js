@@ -1,5 +1,5 @@
 import express from 'express';
-import { listTags, renameTag, mergeTag, deleteTag } from '../db.js';
+import { listTags, renameTag, mergeTag, deleteTag, setTagCategory } from '../db.js';
 import { writeMirror } from '../mirror.js';
 
 export const tags = express.Router();
@@ -8,9 +8,20 @@ tags.get('/', (_req, res) => {
   res.json(listTags());
 });
 
+// Rename (`{ name }`) and/or re-file (`{ category }`) a tag. `category: null`
+// or "" clears it.
 tags.patch('/:id', (req, res, next) => {
   try {
-    const updated = renameTag(Number(req.params.id), req.body?.name ?? '');
+    const id = Number(req.params.id);
+    const body = req.body ?? {};
+    let updated;
+    if ('name' in body) {
+      updated = renameTag(id, body.name ?? '');
+    }
+    if (updated !== null && 'category' in body) {
+      updated = setTagCategory(id, body.category || null);
+    }
+    if (updated === undefined) return res.status(400).json({ error: 'Nothing to update' });
     if (!updated) return res.status(404).json({ error: 'Tag not found' });
     writeMirror();
     res.json(updated);

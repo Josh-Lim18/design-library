@@ -25,6 +25,16 @@ export default function AddItemDialog({ allTags, onClose, onCreated }) {
   const fileInput = useRef(null);
   const suggestions = allTags.map((t) => t.name);
 
+  const [aiTagging, setAiTagging] = useState(false);
+  const [analyze, setAnalyze] = useState(true);
+
+  useEffect(() => {
+    api
+      .health()
+      .then((h) => setAiTagging(Boolean(h?.aiTagging)))
+      .catch(() => setAiTagging(false));
+  }, []);
+
   useEffect(() => {
     if (!file) return setFilePreview(null);
     const objUrl = URL.createObjectURL(file);
@@ -66,6 +76,7 @@ export default function AddItemDialog({ allTags, onClose, onCreated }) {
         if (description.trim()) fd.append('description', description.trim());
         if (sourceUrl.trim()) fd.append('source_url', sourceUrl.trim());
         fd.append('tags', JSON.stringify(tags));
+        fd.append('analyze', String(aiTagging && analyze));
         await api.createFromUpload(fd);
       } else {
         if (!preview?.imageUrl) {
@@ -76,6 +87,7 @@ export default function AddItemDialog({ allTags, onClose, onCreated }) {
           source_url: sourceUrl.trim() || url.trim(),
           description: description.trim(),
           tags,
+          analyze: aiTagging && analyze,
         });
       }
       onCreated();
@@ -217,6 +229,21 @@ export default function AddItemDialog({ allTags, onClose, onCreated }) {
           <TagInput value={tags} onChange={setTags} suggestions={suggestions} />
         </label>
 
+        {aiTagging ? (
+          <label className="control control--inline">
+            <input type="checkbox" checked={analyze} onChange={(e) => setAnalyze(e.target.checked)} />
+            <span>
+              Analyze the image and auto-generate tags (typography, aesthetic, colour, layout,
+              components) — added alongside anything above. Fills the description if you leave it blank.
+            </span>
+          </label>
+        ) : (
+          <p className="hint">
+            Set <code>ANTHROPIC_API_KEY</code> — or install the <code>claude</code> CLI (see the
+            README) — to auto-generate design tags from the image.
+          </p>
+        )}
+
         {error && <p className="form-error">{error}</p>}
       </div>
 
@@ -225,7 +252,11 @@ export default function AddItemDialog({ allTags, onClose, onCreated }) {
           Cancel
         </button>
         <button className="btn btn--primary" onClick={submit} disabled={submitting}>
-          {submitting ? 'Saving…' : 'Save reference'}
+          {submitting
+            ? aiTagging && analyze
+              ? 'Analyzing design…'
+              : 'Saving…'
+            : 'Save reference'}
         </button>
       </div>
     </Modal>

@@ -1,8 +1,10 @@
+import './env.js'; // loads .env into process.env before anything reads it
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { ROOT_DIR, UPLOADS_DIR, JSON_PATH } from './db.js';
+import { ROOT_DIR, UPLOADS_DIR, JSON_PATH, listSections, listStyles } from './db.js';
 import { writeMirror } from './mirror.js';
+import { aiTaggingAvailable } from './lib/analyze.js';
 import { items } from './routes/items.js';
 import { tags } from './routes/tags.js';
 import { preview } from './routes/preview.js';
@@ -30,7 +32,9 @@ app.use('/api/items', items);
 app.use('/api/tags', tags);
 app.use('/api/preview', preview);
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
+app.get('/api/sections', (_req, res) => res.json(listSections()));
+app.get('/api/styles', (_req, res) => res.json(listStyles()));
+app.get('/api/health', (_req, res) => res.json({ ok: true, aiTagging: aiTaggingAvailable() }));
 
 // Frontend: serve the built SPA when it exists.
 if (fs.existsSync(DIST_DIR)) {

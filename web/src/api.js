@@ -7,11 +7,13 @@ async function request(url, options) {
 }
 
 export const api = {
-  listItems({ tags = [], mode = 'or', q = '' } = {}) {
+  listItems({ tags = [], mode = 'or', q = '', section = '', style = '' } = {}) {
     const params = new URLSearchParams();
     if (tags.length) params.set('tags', tags.join(','));
     if (mode === 'and') params.set('mode', 'and');
     if (q) params.set('q', q);
+    if (section) params.set('section', section);
+    if (style) params.set('style', style);
     const qs = params.toString();
     return request(`/api/items${qs ? `?${qs}` : ''}`);
   },
@@ -44,6 +46,22 @@ export const api = {
     return request(`/api/items/${id}`, { method: 'DELETE' });
   },
 
+  reanalyzeItem(id) {
+    return request(`/api/items/${id}/reanalyze`, { method: 'POST' });
+  },
+
+  listSections() {
+    return request('/api/sections');
+  },
+
+  listStyles() {
+    return request('/api/styles');
+  },
+
+  health() {
+    return request('/api/health');
+  },
+
   fetchPreview(url) {
     return request('/api/preview', {
       method: 'POST',
@@ -61,6 +79,14 @@ export const api = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
+    });
+  },
+
+  setTagCategory(id, category) {
+    return request(`/api/tags/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category }),
     });
   },
 

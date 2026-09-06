@@ -2,21 +2,32 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import TagInput from '../components/TagInput.jsx';
+import { groupByCategory } from '../categories.js';
+import { SECTION_ORDER, sectionLabel } from '../sections.js';
+import { STYLE_ORDER, styleLabel } from '../aesthetics.js';
 
 export default function ItemDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { tags: allTags, bump } = useOutletContext();
+  const { tags: allTags, bump, aiTagging } = useOutletContext();
 
   const [item, setItem] = useState(null);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ description: '', source_url: '', tags: [] });
+  const [form, setForm] = useState({
+    description: '',
+    source_url: '',
+    section: '',
+    style: '',
+    tags: [],
+  });
   const [saving, setSaving] = useState(false);
+  const [reanalyzing, setReanalyzing] = useState(false);
 
   useEffect(() => {
     setItem(null);
     setEditing(false);
+    setError(null);
     api.getItem(id).then(setItem).catch((e) => setError(e.message));
   }, [id]);
 
@@ -24,6 +35,8 @@ export default function ItemDetail() {
     setForm({
       description: item.description || '',
       source_url: item.source_url || '',
+      section: item.section || '',
+      style: item.style || '',
       tags: item.tags,
     });
     setEditing(true);
@@ -35,6 +48,8 @@ export default function ItemDetail() {
       const updated = await api.updateItem(id, {
         description: form.description,
         source_url: form.source_url,
+        section: form.section,
+        style: form.style,
         tags: form.tags,
       });
       setItem(updated);
@@ -47,6 +62,20 @@ export default function ItemDetail() {
     }
   }
 
+  async function reanalyze() {
+    setReanalyzing(true);
+    setError(null);
+    try {
+      const updated = await api.reanalyzeItem(id);
+      setItem(updated);
+      bump();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setReanalyzing(false);
+    }
+  }
+
   async function remove() {
     if (!window.confirm('Delete this reference permanently?')) return;
     await api.deleteItem(id);
@@ -54,7 +83,7 @@ export default function ItemDetail() {
     navigate('/');
   }
 
-  if (error) {
+  if (error && !item) {
     return (
       <div className="detail">
         <Link to="/" className="back">
@@ -70,6 +99,12 @@ export default function ItemDetail() {
   if (!item) return <div className="spinner" />;
 
   const created = new Date(item.created_at.replace(' ', 'T') + 'Z');
+
+  const categoryByName = new Map(allTags.map((t) => [t.name.toLowerCase(), t.category]));
+  const tagGroups = groupByCategory(
+    item.tags.map((name) => ({ name })),
+    (t) => categoryByName.get(t.name.toLowerCase())
+  );
 
   return (
     <div className="detail">
@@ -93,6 +128,36 @@ export default function ItemDetail() {
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
+              </div>
+              <div>
+                <div className="field-label">Aesthetic</div>
+                <select
+                  className="input"
+                  value={form.style}
+                  onChange={(e) => setForm({ ...form, style: e.target.value })}
+                >
+                  <option value="">— none —</option>
+                  {STYLE_ORDER.map((s) => (
+                    <option key={s} value={s}>
+                      {styleLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div className="field-label">Section</div>
+                <select
+                  className="input"
+                  value={form.section}
+                  onChange={(e) => setForm({ ...form, section: e.target.value })}
+                >
+                  <option value="">— none —</option>
+                  {SECTION_ORDER.map((s) => (
+                    <option key={s} value={s}>
+                      {sectionLabel(s)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <div className="field-label">Tags</div>
@@ -130,13 +195,44 @@ export default function ItemDetail() {
               </div>
 
               <div>
+                <div className="field-label">Aesthetic</div>
+                {item.style ? (
+                  <Link className="section-pill" to={`/?style=${item.style}`}>
+                    {styleLabel(item.style)}
+                  </Link>
+                ) : (
+                  <p className="desc placeholder">Not set</p>
+                )}
+              </div>
+
+              <div>
+                <div className="field-label">Section</div>
+                {item.section ? (
+                  <Link className="section-pill" to={`/?section=${item.section}`}>
+                    {sectionLabel(item.section)}
+                  </Link>
+                ) : (
+                  <p className="desc placeholder">Not set</p>
+                )}
+              </div>
+
+              <div>
                 <div className="field-label">Tags</div>
                 {item.tags.length ? (
-                  <div className="tags">
-                    {item.tags.map((t) => (
-                      <Link key={t} to={`/?tags=${encodeURIComponent(t)}`}>
-                        {t}
-                      </Link>
+                  <div className="tag-cats">
+                    {tagGroups.map((group) => (
+                      <div className="tag-cat" key={group.category}>
+                        {tagGroups.length > 1 && (
+                          <div className="tag-cat-label">{group.label}</div>
+                        )}
+                        <div className="tags">
+                          {group.tags.map((t) => (
+                            <Link key={t.name} to={`/?tags=${encodeURIComponent(t.name)}`}>
+                              {t.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -164,10 +260,17 @@ export default function ItemDetail() {
                 </p>
               </div>
 
+              {error && <p className="form-error">{error}</p>}
+
               <div className="detail-actions">
                 <button className="btn" onClick={startEdit}>
                   Edit
                 </button>
+                {aiTagging && (
+                  <button className="btn" onClick={reanalyze} disabled={reanalyzing}>
+                    {reanalyzing ? 'Re-analyzing…' : 'Re-analyze'}
+                  </button>
+                )}
                 <button className="btn btn--danger" onClick={remove}>
                   Delete
                 </button>

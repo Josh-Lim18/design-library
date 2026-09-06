@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import MasonryGrid from '../components/MasonryGrid.jsx';
+import { sectionLabel } from '../sections.js';
+import { STYLE_ORDER, styleLabel } from '../aesthetics.js';
 
 export default function Gallery() {
-  const { reloadKey, activeTags, setParam } = useOutletContext();
+  const { styles, reloadKey, activeTags, activeSection, activeStyle, toggleStyle, setParam } =
+    useOutletContext();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode') === 'and' ? 'and' : 'or';
   const q = searchParams.get('q') || '';
@@ -18,23 +21,61 @@ export default function Gallery() {
     let cancelled = false;
     setError(null);
     api
-      .listItems({ tags: activeTags, mode, q: debouncedQ })
+      .listItems({ tags: activeTags, mode, q: debouncedQ, section: activeSection, style: activeStyle })
       .then((data) => !cancelled && setItems(data))
       .catch((e) => !cancelled && setError(e.message));
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tagsKey, mode, debouncedQ, reloadKey]);
+  }, [tagsKey, mode, debouncedQ, activeSection, activeStyle, reloadKey]);
 
-  const filtering = activeTags.length > 0 || q.trim().length > 0;
+  const styleChips = [...styles].sort(
+    (a, b) => STYLE_ORDER.indexOf(a.value) - STYLE_ORDER.indexOf(b.value)
+  );
+  const filtering =
+    activeTags.length > 0 || q.trim().length > 0 || Boolean(activeSection) || Boolean(activeStyle);
 
   return (
     <>
+      {styleChips.length > 0 && (
+        <div className="stylebar">
+          <span className="stylebar-label">Aesthetic</span>
+          {styleChips.map((s) => (
+            <button
+              key={s.value}
+              className={`style-chip${activeStyle === s.value ? ' is-on' : ''}`}
+              onClick={() => toggleStyle(s.value)}
+            >
+              {styleLabel(s.value)}
+              <span className="c">{s.count}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="filterbar">
         <span className="lead">
           {items ? `${items.length} ${items.length === 1 ? 'reference' : 'references'}` : 'Loading'}
         </span>
+
+        {activeStyle && (
+          <span className="chip">
+            {styleLabel(activeStyle)}
+            <button aria-label="Remove aesthetic filter" onClick={() => setParam('style', '')}>
+              ×
+            </button>
+          </span>
+        )}
+
+        {activeSection && (
+          <span className="chip">
+            {sectionLabel(activeSection)}
+            <button aria-label="Remove section filter" onClick={() => setParam('section', '')}>
+              ×
+            </button>
+          </span>
+        )}
 
         {activeTags.map((tag) => (
           <span key={tag} className="chip">
@@ -71,6 +112,8 @@ export default function Gallery() {
               setParam('tags', '');
               setParam('q', '');
               setParam('mode', '');
+              setParam('section', '');
+              setParam('style', '');
             }}
           >
             Clear
@@ -91,7 +134,7 @@ export default function Gallery() {
             <h3>{filtering ? 'Nothing matches these filters' : 'Your library is empty'}</h3>
             <p>
               {filtering
-                ? 'Try removing a tag or clearing the search.'
+                ? 'Try removing a filter or clearing the search.'
                 : 'Add your first reference with the button up top.'}
             </p>
           </div>

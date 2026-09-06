@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { api } from './api.js';
 import TagSidebar from './components/TagSidebar.jsx';
+import SectionSidebar from './components/SectionSidebar.jsx';
 import AddItemDialog from './components/AddItemDialog.jsx';
 import TagManager from './components/TagManager.jsx';
 
@@ -11,27 +12,38 @@ export default function App() {
   const onGallery = location.pathname === '/';
 
   const [tags, setTags] = useState([]);
+  const [sections, setSections] = useState([]);
+  const [styles, setStyles] = useState([]);
+  const [aiTagging, setAiTagging] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [showManager, setShowManager] = useState(false);
 
-  const reloadTags = useCallback(() => {
+  const reloadFacets = useCallback(() => {
     api.listTags().then(setTags).catch(() => {});
+    api.listSections().then(setSections).catch(() => {});
+    api.listStyles().then(setStyles).catch(() => {});
   }, []);
 
   const bump = useCallback(() => {
-    reloadTags();
+    reloadFacets();
     setReloadKey((k) => k + 1);
-  }, [reloadTags]);
+  }, [reloadFacets]);
 
   useEffect(() => {
-    reloadTags();
-  }, [reloadTags]);
+    reloadFacets();
+    api
+      .health()
+      .then((h) => setAiTagging(Boolean(h?.aiTagging)))
+      .catch(() => setAiTagging(false));
+  }, [reloadFacets]);
 
   const activeTags = (searchParams.get('tags') || '')
     .split(',')
     .map((t) => t.trim())
     .filter(Boolean);
+  const activeSection = searchParams.get('section') || '';
+  const activeStyle = searchParams.get('style') || '';
 
   // Functional form so several calls in one handler compose instead of clobbering.
   function setParam(key, value) {
@@ -55,6 +67,14 @@ export default function App() {
     }
   }
 
+  function toggleSection(value) {
+    setParam('section', activeSection === value ? '' : value);
+  }
+
+  function toggleStyle(value) {
+    setParam('style', activeStyle === value ? '' : value);
+  }
+
   const q = searchParams.get('q') || '';
 
   return (
@@ -65,10 +85,15 @@ export default function App() {
             <h1>Design Library</h1>
           </Link>
         </div>
+        <SectionSidebar
+          sections={sections}
+          activeSection={activeSection}
+          onToggle={toggleSection}
+        />
         <TagSidebar
           tags={tags}
           activeTags={activeTags}
-          onToggle={(name) => toggleTag(name)}
+          onToggle={toggleTag}
           onManage={() => setShowManager(true)}
         />
       </aside>
@@ -91,7 +116,23 @@ export default function App() {
           </button>
         </header>
 
-        <Outlet context={{ tags, reloadKey, bump, activeTags, setParam }} />
+        <Outlet
+          context={{
+            tags,
+            sections,
+            styles,
+            aiTagging,
+            reloadKey,
+            bump,
+            activeTags,
+            activeSection,
+            activeStyle,
+            toggleTag,
+            toggleSection,
+            toggleStyle,
+            setParam,
+          }}
+        />
       </div>
 
       {showAdd && (
@@ -104,12 +145,7 @@ export default function App() {
           }}
         />
       )}
-      {showManager && (
-        <TagManager
-          onClose={() => setShowManager(false)}
-          onChanged={bump}
-        />
-      )}
+      {showManager && <TagManager onClose={() => setShowManager(false)} onChanged={bump} />}
     </div>
   );
 }

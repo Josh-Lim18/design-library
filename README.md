@@ -23,6 +23,67 @@ Then open <http://localhost:3001>.
 `npm start` builds the frontend and runs the server on one port. To change the
 port: `PORT=4000 npm start`.
 
+## AI auto-tagging (optional)
+
+When an image is uploaded, the server can analyse it with Claude vision and
+attach generated tags, each filed under a **subcategory** so the library stays
+organised:
+
+| Subcategory | Examples |
+|-------------|----------|
+| Typography | `geometric sans-serif headings`, `serif body copy`, `monospace ui labels` |
+| Aesthetic | `neubrutalism`, `glassmorphism`, `editorial`, `swiss/international` |
+| Colour | `muted earth tones`, `high-contrast black on white`, `dark mode` |
+| Layout | `asymmetric bento grid`, `split-screen hero`, `generous whitespace` |
+| Components | `pricing table`, `logo cloud`, `email capture input` |
+| Mood | `playful`, `luxury`, `understated` |
+| Treatment | `soft drop shadows`, `grain texture`, `duotone photography` |
+
+They're phrased so you can paste them straight into prompts for other projects.
+The generated description fills the item's description when you leave that field
+blank. Generated tags are merged with any tags you typed yourself (which stay
+uncategorised); nothing is overwritten. The tag sidebar and the item view group
+tags by subcategory, and **Manage tags** has a dropdown to re-file any tag
+(including your manual ones) or clear its category.
+
+The analyzer also assigns each screenshot two single-value classifications:
+
+- **Aesthetic** — one broad style bucket: `minimal`, `editorial`, `brutalist`,
+  `swiss`, `corporate`, `glassy`, `playful`, `maximalist`, `luxury`, `dark-tech`,
+  `retro-futurist`, `retro-analog`, `cinematic`, or `other`. Shown as a one-click
+  filter strip across the top of the gallery.
+- **Section** — `landing`, `hero`, `body`, `component`, `nav`, `footer`,
+  `pricing`, `dashboard`, or `other`. Filterable from the left sidebar.
+
+Both compose with the tag and text filters and live in the URL. An item's detail
+page shows and edits both, and has a **Re-analyze** button that reruns the vision
+pass on demand (adds any new tags, sets the aesthetic + section, fills a
+still-blank description). To classify a batch of existing references, run
+`npm run backfill` (needs the server running in another terminal) — it does the
+ones still missing a value; `npm run backfill -- --all` redoes everything.
+
+There are two backends; the server picks one automatically:
+
+1. **API** — set `ANTHROPIC_API_KEY` (copy `.env.example` to `.env`, which the
+   server reads on start). One vision API call per upload, roughly a cent or two
+   on the default model. `.env` is git-ignored, so the key is never committed.
+2. **Claude CLI** — if there's no key but the [`claude`](https://claude.com/claude-code)
+   command is installed and logged in, the server shells out to it headlessly
+   (`claude -p`, restricted to its `Read` tool). No API key, no per-call billing
+   — usage counts against whatever plan that CLI is signed in to. Slower
+   (~15–20 s per image) since each run loads the CLI's own context.
+
+If neither is available the upload flow works exactly as before and the
+"analyse image" checkbox is hidden. Uncheck it on any single upload to skip the
+call.
+
+| Env var | Default | |
+|---------|---------|---|
+| `DESIGN_LIBRARY_AI_BACKEND` | `auto` | `auto` \| `api` \| `cli` \| `off` |
+| `ANTHROPIC_API_KEY` | — | enables the API backend |
+| `DESIGN_LIBRARY_AI_MODEL` | `claude-opus-5` (api) / CLI default | model id (api) or `opus`/`sonnet`/`haiku` (cli) |
+| `DESIGN_LIBRARY_AI_EFFORT` | `low` | `low` … `max` — API backend only |
+
 ## Development
 
 ```bash
@@ -62,10 +123,14 @@ npm run db:rebuild
 - **Gallery** — masonry grid, newest first.
 - **Filter** by one or more tags (match **Any** or **All**) from the sidebar, and
   **search** across descriptions and tag names.
-- **Item detail** — full-size image, description, tags (click to filter), source
-  link, date added; edit or delete inline.
-- **Tag management** — sidebar tag list with counts; rename, merge, and delete tags
-  (renaming onto an existing tag merges into it).
+- **Item detail** — full-size image, description, aesthetic, section, tags (click
+  to filter), source link, date added; edit, re-analyze, or delete inline.
+- **Aesthetic + Section filters** — an **Aesthetic** bucket strip across the top
+  of the gallery, and a **Section** list in the left sidebar with counts. Both
+  compose with tag and text filters and live in the URL.
+- **Tag management** — sidebar tag list with counts, grouped by subcategory;
+  rename, merge, re-file (change subcategory), and delete tags (renaming onto an
+  existing tag merges into it).
 
 ## Project layout
 
@@ -73,11 +138,15 @@ npm run db:rebuild
 server/            Express API + SQLite access
   index.js         app entry — serves the API and the built frontend
   db.js            schema, queries, JSON snapshot/rebuild
+  env.js           loads .env before anything reads process.env
   routes/          items, tags, preview
-  lib/             upload (multer) + scrape (link previews)
+  lib/             upload (multer), scrape (link previews), analyze (Claude vision auto-tagging)
+  migrations/      001 schema … 004 item aesthetic/section (tracked in schema_migrations)
+  backfill.js      re-analyze existing references (npm run backfill)
 web/               React + Vite frontend
   src/pages/       Gallery, ItemDetail
-  src/components/  AddItemDialog, MasonryGrid, TagSidebar, TagManager, TagInput, Modal
+  src/components/  AddItemDialog, MasonryGrid, TagSidebar, SectionSidebar, TagManager, TagInput, Modal
+  src/categories.js / sections.js / aesthetics.js  vocab lists (mirror server/db.js)
 data/              the library (see table above)
 ```
 
@@ -85,13 +154,17 @@ data/              the library (see table above)
 
 | Method | Path | |
 |--------|------|---|
-| `GET` | `/api/items?tags=a,b&mode=and\|or&q=text` | filtered list |
-| `GET` | `/api/items/:id` | one item |
-| `POST` | `/api/items` | create — `multipart/form-data` with an `image`, or JSON `{ image_url, source_url?, description?, tags? }` |
-| `PATCH` | `/api/items/:id` | update `description` / `source_url` / `tags` |
+| `GET` | `/api/items?tags=a,b&mode=and\|or&q=text&section=hero&style=editorial` | filtered list |
+| `GET` | `/api/items/:id` | one item (includes `section`, `style`) |
+| `POST` | `/api/items` | create — `multipart/form-data` with an `image`, or JSON `{ image_url, source_url?, description?, tags? }`. Add `analyze=false` to skip AI auto-tagging for that upload. |
+| `PATCH` | `/api/items/:id` | update `description` / `source_url` / `section` / `style` / `tags` |
+| `POST` | `/api/items/:id/reanalyze` | rerun the vision pass on the stored image |
 | `DELETE` | `/api/items/:id` | delete item + its image file |
 | `POST` | `/api/preview` | `{ url }` → `{ title, imageUrl, siteName }` (no persistence) |
-| `GET` | `/api/tags` | tags with item counts |
-| `PATCH` | `/api/tags/:id` | rename (`{ name }`) |
+| `GET` | `/api/tags` | tags with item counts and `category` |
+| `PATCH` | `/api/tags/:id` | rename (`{ name }`) and/or re-file (`{ category }`, `null` clears) |
 | `POST` | `/api/tags/:id/merge` | merge (`{ intoId }`) |
 | `DELETE` | `/api/tags/:id` | delete |
+| `GET` | `/api/sections` | sections in use, with item counts |
+| `GET` | `/api/styles` | aesthetic buckets in use, with item counts |
+| `GET` | `/api/health` | `{ ok, aiTagging }` — `aiTagging` is true when a tagging backend is available |

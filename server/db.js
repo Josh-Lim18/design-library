@@ -16,10 +16,81 @@ fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 export const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON');
 
-// Migrations are idempotent (IF NOT EXISTS); just run them all on boot.
+// Run each migration file once, tracked in schema_migrations. (001 predates this
+// table and is written with IF NOT EXISTS, so re-running it on the first boot
+// after this change is harmless; later files needn't be idempotent.)
+db.exec(
+  `CREATE TABLE IF NOT EXISTS schema_migrations (
+     name TEXT PRIMARY KEY,
+     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+   )`
+);
 const migrationsDir = path.join(__dirname, 'migrations');
+const appliedMigrations = new Set(
+  db.prepare('SELECT name FROM schema_migrations').all().map((r) => r.name)
+);
+const recordMigration = db.prepare('INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)');
 for (const file of fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()) {
+  if (appliedMigrations.has(file)) continue;
   db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+  recordMigration.run(file);
+}
+
+/** Coarse subcategories a tag can be filed under. NULL = uncategorised. */
+export const TAG_CATEGORIES = [
+  'typography',
+  'aesthetic',
+  'color',
+  'layout',
+  'components',
+  'mood',
+  'treatment',
+];
+
+/** Allowed values for items.section, in display order. NULL = not yet analyzed. */
+export const SECTIONS = [
+  'landing',
+  'hero',
+  'body',
+  'component',
+  'nav',
+  'footer',
+  'pricing',
+  'dashboard',
+  'other',
+];
+
+/** Coerce an arbitrary value to a valid section, or null. */
+export function normalizeSection(value) {
+  const s = String(value ?? '').trim().toLowerCase();
+  return SECTIONS.includes(s) ? s : null;
+}
+
+/**
+ * Allowed values for items.style — broad aesthetic buckets, in display order.
+ * Deliberately coarse so many designs fall under each. NULL = not yet analyzed.
+ */
+export const STYLES = [
+  'minimal',
+  'editorial',
+  'brutalist',
+  'swiss',
+  'corporate',
+  'glassy',
+  'playful',
+  'maximalist',
+  'luxury',
+  'dark-tech',
+  'retro-futurist',
+  'retro-analog',
+  'cinematic',
+  'other',
+];
+
+/** Coerce an arbitrary value to a valid style, or null. */
+export function normalizeStyle(value) {
+  const s = String(value ?? '').trim().toLowerCase();
+  return STYLES.includes(s) ? s : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,6 +142,8 @@ function rowToItem(row) {
     image_path: row.image_path,
     source_url: row.source_url,
     description: row.description,
+    section: row.section ?? null,
+    style: row.style ?? null,
     created_at: row.created_at,
     tags: row.tags ? row.tags.split(TAG_SEP).sort((a, b) => a.localeCompare(b)) : [],
   };
@@ -85,10 +158,22 @@ const ITEM_SELECT = `
   FROM items i
 `;
 
-export function getItems({ tags = [], mode = 'or', q = '' } = {}) {
+export function getItems({ tags = [], mode = 'or', q = '', section = '', style = '' } = {}) {
   const names = normalizeTagNames(tags);
   const clauses = [];
   const params = [];
+
+  const sectionFilter = normalizeSection(section);
+  if (sectionFilter) {
+    clauses.push('i.section = ?');
+    params.push(sectionFilter);
+  }
+
+  const styleFilter = normalizeStyle(style);
+  if (styleFilter) {
+    clauses.push('i.style = ?');
+    params.push(styleFilter);
+  }
 
   if (names.length) {
     const placeholders = names.map(() => '?').join(', ');
@@ -131,31 +216,44 @@ export function getItem(id) {
   return row ? rowToItem(row) : null;
 }
 
-export function createItem({ image_path, source_url = null, description = null, tags = [], created_at = null }) {
+export function createItem({
+  image_path,
+  source_url = null,
+  description = null,
+  section = null,
+  style = null,
+  tags = [],
+  created_at = null,
+}) {
   if (!image_path) throw Object.assign(new Error('image_path is required'), { status: 400 });
-  let id;
+  const cols = ['image_path', 'source_url', 'description', 'section', 'style'];
+  const vals = [
+    image_path,
+    source_url || null,
+    description || null,
+    normalizeSection(section),
+    normalizeStyle(style),
+  ];
   if (created_at) {
-    const info = db
-      .prepare('INSERT INTO items (image_path, source_url, description, created_at) VALUES (?, ?, ?, ?)')
-      .run(image_path, source_url || null, description || null, created_at);
-    id = Number(info.lastInsertRowid);
-  } else {
-    const info = db
-      .prepare('INSERT INTO items (image_path, source_url, description) VALUES (?, ?, ?)')
-      .run(image_path, source_url || null, description || null);
-    id = Number(info.lastInsertRowid);
+    cols.push('created_at');
+    vals.push(created_at);
   }
-  setItemTags(id, tags);
-  return getItem(id);
+  const info = db
+    .prepare(`INSERT INTO items (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`)
+    .run(...vals);
+  setItemTags(Number(info.lastInsertRowid), tags);
+  return getItem(Number(info.lastInsertRowid));
 }
 
-export function updateItem(id, { source_url, description, tags }) {
+export function updateItem(id, { source_url, description, section, style, tags }) {
   const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(id);
   if (!existing) return null;
   const sets = [];
   const params = [];
   if (source_url !== undefined) { sets.push('source_url = ?'); params.push(source_url || null); }
   if (description !== undefined) { sets.push('description = ?'); params.push(description || null); }
+  if (section !== undefined) { sets.push('section = ?'); params.push(normalizeSection(section)); }
+  if (style !== undefined) { sets.push('style = ?'); params.push(normalizeStyle(style)); }
   if (sets.length) db.prepare(`UPDATE items SET ${sets.join(', ')} WHERE id = ?`).run(...params, id);
   if (tags !== undefined) setItemTags(id, tags);
   pruneOrphanTags();
@@ -176,11 +274,36 @@ export function deleteItem(id) {
 
 export function listTags() {
   return db.prepare(`
-    SELECT t.id, t.name, COUNT(it.item_id) AS count
+    SELECT t.id, t.name, t.category, COUNT(it.item_id) AS count
     FROM tags t LEFT JOIN item_tags it ON it.tag_id = t.id
     GROUP BY t.id
     ORDER BY t.name COLLATE NOCASE
   `).all();
+}
+
+const setCategoryByNameStmt = db.prepare(
+  'UPDATE tags SET category = ? WHERE name = ? COLLATE NOCASE'
+);
+
+/**
+ * Set the category on existing tag rows, matched by name. Accepts
+ * `[{ name, category }]`; entries with an unknown category are ignored, so a
+ * bad value from the analyzer can never corrupt the column.
+ */
+export function setTagCategories(pairs) {
+  for (const { name, category } of pairs ?? []) {
+    if (!name || !TAG_CATEGORIES.includes(category)) continue;
+    setCategoryByNameStmt.run(category, String(name));
+  }
+}
+
+/** Set (or clear, with a falsy/invalid value) one tag's category by id. */
+export function setTagCategory(id, category) {
+  const tag = db.prepare('SELECT id FROM tags WHERE id = ?').get(id);
+  if (!tag) return null;
+  const cat = TAG_CATEGORIES.includes(category) ? category : null;
+  db.prepare('UPDATE tags SET category = ? WHERE id = ?').run(cat, id);
+  return db.prepare('SELECT id, name, category FROM tags WHERE id = ?').get(id);
 }
 
 export function renameTag(id, rawName) {
@@ -217,21 +340,53 @@ export function pruneOrphanTags() {
 }
 
 // ---------------------------------------------------------------------------
+// Sections
+// ---------------------------------------------------------------------------
+
+/** The sections actually in use, with item counts, ordered by SECTIONS. */
+export function listSections() {
+  const rows = db
+    .prepare(
+      `SELECT section AS value, COUNT(*) AS count
+       FROM items WHERE section IS NOT NULL
+       GROUP BY section`
+    )
+    .all();
+  return rows.sort((a, b) => SECTIONS.indexOf(a.value) - SECTIONS.indexOf(b.value));
+}
+
+/** The style buckets actually in use, with item counts, ordered by STYLES. */
+export function listStyles() {
+  const rows = db
+    .prepare(
+      `SELECT style AS value, COUNT(*) AS count
+       FROM items WHERE style IS NOT NULL
+       GROUP BY style`
+    )
+    .all();
+  return rows.sort((a, b) => STYLES.indexOf(a.value) - STYLES.indexOf(b.value));
+}
+
+// ---------------------------------------------------------------------------
 // JSON mirror / rebuild
 // ---------------------------------------------------------------------------
 
 export function snapshot() {
   return {
-    version: 1,
+    version: 4,
     exported_at: new Date().toISOString(),
     items: getItems().map((it) => ({
       image_path: it.image_path,
       source_url: it.source_url,
       description: it.description,
+      section: it.section,
+      style: it.style,
       created_at: it.created_at,
       tags: it.tags,
     })),
-    tags: listTags().map((t) => t.name),
+    // Plain string when uncategorised (keeps the mirror diff-friendly), object
+    // once a category is attached.
+    tags: listTags().map((t) => (t.category ? { name: t.name, category: t.category } : t.name)),
   };
 }
 
@@ -249,9 +404,18 @@ export function rebuildFromSnapshot(data) {
       image_path: it.image_path,
       source_url: it.source_url,
       description: it.description,
+      section: it.section,
+      style: it.style,
       tags: it.tags,
       created_at: it.created_at,
     });
   }
-  for (const name of data.tags ?? []) upsertTags([typeof name === 'string' ? name : name.name]);
+  for (const entry of data.tags ?? []) {
+    const name = typeof entry === 'string' ? entry : entry.name;
+    if (!name) continue;
+    upsertTags([name]);
+    if (entry && typeof entry === 'object' && entry.category) {
+      setTagCategories([{ name, category: entry.category }]);
+    }
+  }
 }
