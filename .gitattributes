@@ -1,0 +1,13 @@
+# Normalize all text to LF in the repo so the library stays clean across machines.
+* text=auto eol=lf
+
+# The SQLite database is binary — never touch line endings, never try to merge.
+data/library.db binary
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.avif binary

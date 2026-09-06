@@ -1,0 +1,27 @@
+{
+  "name": "design-library",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal UI/UX design inspiration library — local, single-user, git-portable.",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "start": "npm run build && node server/index.js",
+    "build": "npm run build --workspace web",
+    "dev": "concurrently -n server,web -c blue,magenta \"node --watch server/index.js\" \"npm run dev --workspace web\"",
+    "db:rebuild": "node server/rebuild.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "multer": "^2.0.1",
+    "node-html-parser": "^7.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
