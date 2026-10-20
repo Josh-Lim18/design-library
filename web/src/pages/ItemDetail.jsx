@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import TagInput from '../components/TagInput.jsx';
@@ -44,6 +44,7 @@ export default function ItemDetail() {
 
   async function save() {
     setSaving(true);
+    setError(null);
     try {
       const updated = await api.updateItem(id, {
         description: form.description,
@@ -83,6 +84,21 @@ export default function ItemDetail() {
     navigate('/');
   }
 
+  const categoryByName = useMemo(
+    () => new Map(allTags.map((t) => [t.name.toLowerCase(), t.category])),
+    [allTags]
+  );
+  const tagGroups = useMemo(
+    () =>
+      item
+        ? groupByCategory(
+            item.tags.map((name) => ({ name })),
+            (t) => categoryByName.get(t.name.toLowerCase())
+          )
+        : [],
+    [item, categoryByName]
+  );
+
   if (error && !item) {
     return (
       <div className="detail">
@@ -100,12 +116,6 @@ export default function ItemDetail() {
 
   const created = new Date(item.created_at.replace(' ', 'T') + 'Z');
 
-  const categoryByName = new Map(allTags.map((t) => [t.name.toLowerCase(), t.category]));
-  const tagGroups = groupByCategory(
-    item.tags.map((name) => ({ name })),
-    (t) => categoryByName.get(t.name.toLowerCase())
-  );
-
   return (
     <div className="detail">
       <Link to="/" className="back">
@@ -118,6 +128,7 @@ export default function ItemDetail() {
         </figure>
 
         <aside>
+          {error && <p className="form-error">{error}</p>}
           {editing ? (
             <>
               <div>
@@ -259,8 +270,6 @@ export default function ItemDetail() {
                   })}
                 </p>
               </div>
-
-              {error && <p className="form-error">{error}</p>}
 
               <div className="detail-actions">
                 <button className="btn" onClick={startEdit}>

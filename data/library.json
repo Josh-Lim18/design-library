@@ -1,7 +1,106 @@
 {
   "version": 4,
-  "exported_at": "2026-09-06T14:54:38.938Z",
+  "exported_at": "2026-09-08T12:09:26.037Z",
   "items": [
+    {
+      "image_path": "2026-09-08T12-09-05Z_d0d4da79.png",
+      "source_url": null,
+      "description": "A full-bleed digital painting of a lone hiker silhouette with a walking stick standing on a grassy hillside, facing a massive sunlit peak wrapped in mist at dawn. There is no interface, text, or branding — the illustration fills the entire frame.",
+      "section": "other",
+      "style": "cinematic",
+      "created_at": "2026-09-08 12:09:05",
+      "tags": [
+        "adventurous",
+        "atmospheric haze",
+        "atmospheric landscape",
+        "backlit rim lighting",
+        "cinematic",
+        "concept art illustration",
+        "contemplative",
+        "digital matte painting",
+        "full-bleed imagery",
+        "golden backlit peak",
+        "hazy pastel sky",
+        "low horizon line",
+        "muted misty blues",
+        "off-center foreground subject",
+        "painterly",
+        "serene",
+        "single dominant focal peak",
+        "smooth gradient sky",
+        "soft painterly brushwork",
+        "warm sunrise orange"
+      ]
+    },
+    {
+      "image_path": "2026-09-08T12-06-40Z_bb604480.png",
+      "source_url": null,
+      "description": "An interactive estate page for a Champagne vineyard ('Les Oriseaux', Merry et Saint Thierry) showing a hand-drawn aerial view of the vineyard landscape with one parcel highlighted in red hatching. A menu and map toggle sit at the top, and a horizontal index of individual plot names runs along the bottom.",
+      "section": "body",
+      "style": "luxury",
+      "created_at": "2026-09-08 12:06:40",
+      "tags": [
+        "artisanal",
+        "centered title overlay",
+        "cream paper background",
+        "delicate serif index labels",
+        "duotone sepia rendering",
+        "editorial",
+        "faded vermilion parcel overlay",
+        "full-bleed illustrated map",
+        "generous negative space",
+        "halftone paper grain texture",
+        "hand-drawn aerial vineyard map",
+        "hand-drawn pen-and-ink illustration",
+        "hatched red linework fill",
+        "horizontal bottom plot index",
+        "letter-spaced small-caps serif subhead",
+        "luxury",
+        "menu toggle",
+        "muted sepia and taupe linework",
+        "old-world",
+        "old-world cartography",
+        "plot-name index list",
+        "sound and map toggles",
+        "split top nav with menu and map toggle",
+        "stacked serif menu label",
+        "understated",
+        "understated luxury",
+        "vintage engraving illustration",
+        "warm off-white",
+        "wide-tracked serif display heading"
+      ]
+    },
+    {
+      "image_path": "2026-09-08T12-04-52Z_db5ba2da.png",
+      "source_url": null,
+      "description": "A full-bleed background image of a pastel sky with sunlit pink and purple clouds parting around a bright center. The photo is heavily processed with horizontal scanlines and digital glitch distortion, with no text or interface elements present.",
+      "section": "other",
+      "style": "retro-futurist",
+      "created_at": "2026-09-08 12:04:52",
+      "tags": [
+        "centered glow",
+        "chromatic aberration",
+        "cyan-to-indigo gradient",
+        "datamosh artifacts",
+        "dense horizontal scanlines",
+        "dreamy",
+        "dreamy pastel palette",
+        "edge-to-edge sky",
+        "ethereal",
+        "full-bleed imagery",
+        "glitch art",
+        "lo-fi digital",
+        "no content or chrome",
+        "nostalgic",
+        "pastel blue and pink sky",
+        "pixel-sorting distortion",
+        "retro-futurist",
+        "sunlit peach cloud highlights",
+        "vaporwave",
+        "vhs glitch texture"
+      ]
+    },
     {
       "image_path": "2026-09-06T13-35-48Z_410867ef.png",
       "source_url": null,
@@ -2596,12 +2695,20 @@
       "category": "treatment"
     },
     {
+      "name": "atmospheric haze",
+      "category": "treatment"
+    },
+    {
       "name": "atmospheric haze and clouds",
       "category": "treatment"
     },
     {
       "name": "atmospheric haze and depth",
       "category": "treatment"
+    },
+    {
+      "name": "atmospheric landscape",
+      "category": "aesthetic"
     },
     {
       "name": "atmospheric minimalist",
@@ -2650,6 +2757,10 @@
     {
       "name": "awe-inspiring",
       "category": "mood"
+    },
+    {
+      "name": "backlit rim lighting",
+      "category": "treatment"
     },
     {
       "name": "battery and clock status bar",
@@ -3000,6 +3111,10 @@
       "category": "layout"
     },
     {
+      "name": "centered glow",
+      "category": "layout"
+    },
+    {
       "name": "centered headline and subtext",
       "category": "layout"
     },
@@ -3081,6 +3196,10 @@
     },
     {
       "name": "centered text overlay",
+      "category": "layout"
+    },
+    {
+      "name": "centered title overlay",
       "category": "layout"
     },
     {
@@ -3302,6 +3421,10 @@
     {
       "name": "cobalt blue poster ink",
       "category": "color"
+    },
+    {
+      "name": "concept art illustration",
+      "category": "aesthetic"
     },
     {
       "name": "concrete grey backdrop",
@@ -3556,6 +3679,10 @@
       "category": "color"
     },
     {
+      "name": "cream paper background",
+      "category": "color"
+    },
+    {
       "name": "cream white text",
       "category": "color"
     },
@@ -3610,6 +3737,10 @@
     {
       "name": "cutting-edge",
       "category": "mood"
+    },
+    {
+      "name": "cyan-to-indigo gradient",
+      "category": "color"
     },
     {
       "name": "cyber tech",
@@ -3764,6 +3895,10 @@
       "category": "aesthetic"
     },
     {
+      "name": "datamosh artifacts",
+      "category": "treatment"
+    },
+    {
       "name": "deep black image field",
       "category": "color"
     },
@@ -3816,8 +3951,16 @@
       "category": "color"
     },
     {
+      "name": "delicate serif index labels",
+      "category": "typography"
+    },
+    {
       "name": "dense data-table grid",
       "category": "layout"
+    },
+    {
+      "name": "dense horizontal scanlines",
+      "category": "treatment"
     },
     {
       "name": "dense monospaced poster text",
@@ -3876,6 +4019,10 @@
       "category": "aesthetic"
     },
     {
+      "name": "digital matte painting",
+      "category": "aesthetic"
+    },
+    {
       "name": "digital-organic collage",
       "category": "aesthetic"
     },
@@ -3922,6 +4069,10 @@
     {
       "name": "dreamy",
       "category": "mood"
+    },
+    {
+      "name": "dreamy pastel palette",
+      "category": "color"
     },
     "dropdown caret affordance",
     {
@@ -3970,6 +4121,10 @@
     },
     {
       "name": "duotone photography",
+      "category": "treatment"
+    },
+    {
+      "name": "duotone sepia rendering",
       "category": "treatment"
     },
     {
@@ -4049,12 +4204,16 @@
       "category": "layout"
     },
     {
+      "name": "edge-to-edge sky",
+      "category": "layout"
+    },
+    {
       "name": "edgy",
       "category": "mood"
     },
     {
       "name": "editorial",
-      "category": "mood"
+      "category": "aesthetic"
     },
     {
       "name": "editorial beauty branding",
@@ -4177,6 +4336,10 @@
       "category": "color"
     },
     {
+      "name": "ethereal",
+      "category": "mood"
+    },
+    {
       "name": "experimental",
       "category": "mood"
     },
@@ -4203,6 +4366,10 @@
     {
       "name": "external link arrow indicator",
       "category": "components"
+    },
+    {
+      "name": "faded vermilion parcel overlay",
+      "category": "color"
     },
     {
       "name": "faint geometric line overlay",
@@ -4485,6 +4652,10 @@
       "category": "layout"
     },
     {
+      "name": "full-bleed illustrated map",
+      "category": "layout"
+    },
+    {
       "name": "full-bleed image",
       "category": "treatment"
     },
@@ -4663,6 +4834,10 @@
       "category": "aesthetic"
     },
     {
+      "name": "glitch art",
+      "category": "aesthetic"
+    },
+    {
       "name": "glitch digital",
       "category": "aesthetic"
     },
@@ -4741,6 +4916,10 @@
     {
       "name": "glowing starfield",
       "category": "treatment"
+    },
+    {
+      "name": "golden backlit peak",
+      "category": "color"
     },
     {
       "name": "golden-hour lighting",
@@ -4875,6 +5054,10 @@
       "category": "aesthetic"
     },
     {
+      "name": "halftone paper grain texture",
+      "category": "treatment"
+    },
+    {
       "name": "halftone print-inspired",
       "category": "aesthetic"
     },
@@ -4900,6 +5083,14 @@
     },
     {
       "name": "hand-carved stamp motif",
+      "category": "treatment"
+    },
+    {
+      "name": "hand-drawn aerial vineyard map",
+      "category": "components"
+    },
+    {
+      "name": "hand-drawn pen-and-ink illustration",
       "category": "treatment"
     },
     {
@@ -4935,6 +5126,10 @@
       "category": "treatment"
     },
     {
+      "name": "hatched red linework fill",
+      "category": "treatment"
+    },
+    {
       "name": "hazy blue sky backdrop",
       "category": "color"
     },
@@ -4945,6 +5140,10 @@
     {
       "name": "hazy cloud atmosphere",
       "category": "treatment"
+    },
+    {
+      "name": "hazy pastel sky",
+      "category": "color"
     },
     {
       "name": "headline upper-left caption lower-right",
@@ -5117,6 +5316,10 @@
     {
       "name": "high-resolution aerial photography",
       "category": "treatment"
+    },
+    {
+      "name": "horizontal bottom plot index",
+      "category": "layout"
     },
     {
       "name": "horizontal horizon divider line",
@@ -5368,6 +5571,10 @@
       "category": "typography"
     },
     {
+      "name": "letter-spaced small-caps serif subhead",
+      "category": "typography"
+    },
+    {
       "name": "letter-spaced uppercase nav",
       "category": "typography"
     },
@@ -5436,6 +5643,10 @@
       "category": "aesthetic"
     },
     {
+      "name": "lo-fi digital",
+      "category": "aesthetic"
+    },
+    {
       "name": "login / register link with icon",
       "category": "components"
     },
@@ -5482,6 +5693,10 @@
     {
       "name": "lookbook fashion",
       "category": "aesthetic"
+    },
+    {
+      "name": "low horizon line",
+      "category": "layout"
     },
     {
       "name": "low-contrast desaturated imagery",
@@ -5970,6 +6185,10 @@
       "category": "color"
     },
     {
+      "name": "muted misty blues",
+      "category": "color"
+    },
+    {
       "name": "muted multicolor app icons",
       "category": "color"
     },
@@ -5991,6 +6210,10 @@
     },
     {
       "name": "muted rust and timber browns",
+      "category": "color"
+    },
+    {
+      "name": "muted sepia and taupe linework",
       "category": "color"
     },
     {
@@ -6151,6 +6374,10 @@
       "category": "treatment"
     },
     {
+      "name": "no content or chrome",
+      "category": "layout"
+    },
+    {
       "name": "no drop shadows",
       "category": "treatment"
     },
@@ -6215,6 +6442,10 @@
       "category": "layout"
     },
     {
+      "name": "off-center foreground subject",
+      "category": "layout"
+    },
+    {
       "name": "off-white panel",
       "category": "color"
     },
@@ -6225,6 +6456,14 @@
     {
       "name": "offset logo lock-up left of center",
       "category": "layout"
+    },
+    {
+      "name": "old-world",
+      "category": "mood"
+    },
+    {
+      "name": "old-world cartography",
+      "category": "aesthetic"
     },
     {
       "name": "olive shadow tones",
@@ -6388,6 +6627,10 @@
       "category": "components"
     },
     {
+      "name": "painterly",
+      "category": "aesthetic"
+    },
+    {
       "name": "paired pill buttons",
       "category": "layout"
     },
@@ -6398,6 +6641,10 @@
     {
       "name": "particle point-cloud render",
       "category": "treatment"
+    },
+    {
+      "name": "pastel blue and pink sky",
+      "category": "color"
     },
     {
       "name": "pastel traffic-light accent dots",
@@ -6604,6 +6851,10 @@
       "category": "treatment"
     },
     {
+      "name": "pixel-sorting distortion",
+      "category": "treatment"
+    },
+    {
       "name": "pixelated bitmap display lettering",
       "category": "typography"
     },
@@ -6626,6 +6877,10 @@
     {
       "name": "playful skeuomorphism",
       "category": "aesthetic"
+    },
+    {
+      "name": "plot-name index list",
+      "category": "components"
     },
     {
       "name": "plus icon badge",
@@ -7173,6 +7428,10 @@
       "category": "color"
     },
     {
+      "name": "single dominant focal peak",
+      "category": "layout"
+    },
+    {
       "name": "single electric blue accent",
       "category": "color"
     },
@@ -7414,6 +7673,10 @@
       "category": "treatment"
     },
     {
+      "name": "smooth gradient sky",
+      "category": "treatment"
+    },
+    {
       "name": "smooth studio lighting",
       "category": "treatment"
     },
@@ -7510,6 +7773,10 @@
       "category": "treatment"
     },
     {
+      "name": "soft painterly brushwork",
+      "category": "treatment"
+    },
+    {
       "name": "soft peach and lavender tones",
       "category": "color"
     },
@@ -7562,6 +7829,10 @@
       "category": "mood"
     },
     {
+      "name": "sound and map toggles",
+      "category": "components"
+    },
+    {
       "name": "sparse corner-anchored ui elements",
       "category": "layout"
     },
@@ -7602,6 +7873,10 @@
       "category": "color"
     },
     {
+      "name": "split top nav with menu and map toggle",
+      "category": "layout"
+    },
+    {
       "name": "split-screen 50/50",
       "category": "layout"
     },
@@ -7629,6 +7904,10 @@
     {
       "name": "stacked full-viewport hero bands",
       "category": "layout"
+    },
+    {
+      "name": "stacked serif menu label",
+      "category": "typography"
     },
     {
       "name": "stacked two-line logotype",
@@ -7777,6 +8056,10 @@
     {
       "name": "subtle vignette gradient at edges",
       "category": "treatment"
+    },
+    {
+      "name": "sunlit peach cloud highlights",
+      "category": "color"
     },
     {
       "name": "sunset backlight glow",
@@ -8455,6 +8738,10 @@
       "category": "components"
     },
     {
+      "name": "vaporwave",
+      "category": "aesthetic"
+    },
+    {
       "name": "vast negative space right",
       "category": "layout"
     },
@@ -8543,6 +8830,10 @@
       "category": "typography"
     },
     {
+      "name": "vhs glitch texture",
+      "category": "treatment"
+    },
+    {
       "name": "view project link",
       "category": "components"
     },
@@ -8573,6 +8864,10 @@
     {
       "name": "vignetted foliage framing",
       "category": "treatment"
+    },
+    {
+      "name": "vintage engraving illustration",
+      "category": "aesthetic"
     },
     {
       "name": "vivid documentary food photography",
@@ -8703,6 +8998,10 @@
       "category": "color"
     },
     {
+      "name": "warm off-white",
+      "category": "color"
+    },
+    {
       "name": "warm off-white paper",
       "category": "color"
     },
@@ -8732,6 +9031,10 @@
     },
     {
       "name": "warm skin-tone midtones",
+      "category": "color"
+    },
+    {
+      "name": "warm sunrise orange",
       "category": "color"
     },
     {
@@ -8936,6 +9239,10 @@
     },
     {
       "name": "wide-tracked sans-serif logotype",
+      "category": "typography"
+    },
+    {
+      "name": "wide-tracked serif display heading",
       "category": "typography"
     },
     {

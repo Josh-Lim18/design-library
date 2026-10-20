@@ -1,0 +1,12 @@
+{
+  "framework": null,
+  "buildCommand": "npm run build && cp -r data/uploads web/dist/uploads",
+  "outputDirectory": "web/dist",
+  "functions": {
+    "api/index.js": { "includeFiles": "data/library.db" }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -17,9 +17,12 @@ tags.patch('/:id', (req, res, next) => {
     let updated;
     if ('name' in body) {
       updated = renameTag(id, body.name ?? '');
+      if (!updated) return res.status(404).json({ error: 'Tag not found' });
     }
-    if (updated !== null && 'category' in body) {
-      updated = setTagCategory(id, body.category || null);
+    if ('category' in body) {
+      // A rename onto an existing tag merges and deletes `id`; re-file the
+      // surviving row (its id comes back from renameTag) rather than `id`.
+      updated = setTagCategory(updated?.id ?? id, body.category || null);
     }
     if (updated === undefined) return res.status(400).json({ error: 'Nothing to update' });
     if (!updated) return res.status(404).json({ error: 'Tag not found' });

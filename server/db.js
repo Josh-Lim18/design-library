@@ -2,6 +2,13 @@ import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  TAG_CATEGORIES,
+  SECTIONS,
+  STYLES,
+  normalizeSection,
+  normalizeStyle,
+} from './lib/vocab.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,87 +18,41 @@ export const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 export const DB_PATH = path.join(DATA_DIR, 'library.db');
 export const JSON_PATH = path.join(DATA_DIR, 'library.json');
 
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// On Vercel the filesystem is read-only, so the deployment serves the committed
+// library as-is: no migrations, no writes (index.js rejects mutating requests).
+export const READ_ONLY = Boolean(process.env.VERCEL);
 
-export const db = new DatabaseSync(DB_PATH);
+if (!READ_ONLY) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+export const db = new DatabaseSync(DB_PATH, { readOnly: READ_ONLY });
 db.exec('PRAGMA foreign_keys = ON');
 
 // Run each migration file once, tracked in schema_migrations. (001 predates this
 // table and is written with IF NOT EXISTS, so re-running it on the first boot
 // after this change is harmless; later files needn't be idempotent.)
-db.exec(
-  `CREATE TABLE IF NOT EXISTS schema_migrations (
-     name TEXT PRIMARY KEY,
-     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-   )`
-);
-const migrationsDir = path.join(__dirname, 'migrations');
-const appliedMigrations = new Set(
-  db.prepare('SELECT name FROM schema_migrations').all().map((r) => r.name)
-);
-const recordMigration = db.prepare('INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)');
-for (const file of fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()) {
-  if (appliedMigrations.has(file)) continue;
-  db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
-  recordMigration.run(file);
+if (!READ_ONLY) {
+  db.exec(
+    `CREATE TABLE IF NOT EXISTS schema_migrations (
+       name TEXT PRIMARY KEY,
+       applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+     )`
+  );
+  const migrationsDir = path.join(__dirname, 'migrations');
+  const appliedMigrations = new Set(
+    db.prepare('SELECT name FROM schema_migrations').all().map((r) => r.name)
+  );
+  const recordMigration = db.prepare('INSERT OR IGNORE INTO schema_migrations (name) VALUES (?)');
+  for (const file of fs.readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()) {
+    if (appliedMigrations.has(file)) continue;
+    db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+    recordMigration.run(file);
+  }
 }
 
-/** Coarse subcategories a tag can be filed under. NULL = uncategorised. */
-export const TAG_CATEGORIES = [
-  'typography',
-  'aesthetic',
-  'color',
-  'layout',
-  'components',
-  'mood',
-  'treatment',
-];
-
-/** Allowed values for items.section, in display order. NULL = not yet analyzed. */
-export const SECTIONS = [
-  'landing',
-  'hero',
-  'body',
-  'component',
-  'nav',
-  'footer',
-  'pricing',
-  'dashboard',
-  'other',
-];
-
-/** Coerce an arbitrary value to a valid section, or null. */
-export function normalizeSection(value) {
-  const s = String(value ?? '').trim().toLowerCase();
-  return SECTIONS.includes(s) ? s : null;
-}
-
-/**
- * Allowed values for items.style — broad aesthetic buckets, in display order.
- * Deliberately coarse so many designs fall under each. NULL = not yet analyzed.
- */
-export const STYLES = [
-  'minimal',
-  'editorial',
-  'brutalist',
-  'swiss',
-  'corporate',
-  'glassy',
-  'playful',
-  'maximalist',
-  'luxury',
-  'dark-tech',
-  'retro-futurist',
-  'retro-analog',
-  'cinematic',
-  'other',
-];
-
-/** Coerce an arbitrary value to a valid style, or null. */
-export function normalizeStyle(value) {
-  const s = String(value ?? '').trim().toLowerCase();
-  return STYLES.includes(s) ? s : null;
-}
+// Classification vocabularies and their coercion helpers live in a side-effect-
+// free module (server/lib/vocab.js) so they're unit-testable on their own.
+// Re-exported here because callers have always imported them from db.js.
+export { TAG_CATEGORIES, SECTIONS, STYLES, normalizeSection, normalizeStyle };
 
 // ---------------------------------------------------------------------------
 // Tag helpers

@@ -1,8 +1,9 @@
+import { useMemo } from 'react';
 import { groupByCategory } from '../categories.js';
 
 export default function TagSidebar({ tags, activeTags, onToggle, onManage }) {
   const active = new Set(activeTags.map((t) => t.toLowerCase()));
-  const groups = groupByCategory(tags);
+  const groups = useMemo(() => groupByCategory(tags), [tags]);
 
   return (
     <div className="side-section">

@@ -4,15 +4,15 @@ import { spawn, spawnSync } from 'node:child_process';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { ROOT_DIR, UPLOADS_DIR } from '../db.js';
 import {
-  ROOT_DIR,
-  UPLOADS_DIR,
   TAG_CATEGORIES,
   SECTIONS,
   STYLES,
   normalizeSection,
   normalizeStyle,
-} from '../db.js';
+  flattenCategorized,
+} from './vocab.js';
 
 // Vision (API path) accepts base64 images up to ~5 MB each; stay under that.
 const MAX_API_IMAGE_BYTES = 4.5 * 1024 * 1024;
@@ -223,26 +223,6 @@ Read the image at ${relPath} and respond with ONLY a single-line JSON object of 
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
-
-/** Flatten the per-category arrays into `[{ name, category }]`, cleaned & de-duped. */
-function flattenCategorized(raw) {
-  const seen = new Set();
-  const out = [];
-  for (const category of TAG_CATEGORIES) {
-    for (const value of Array.isArray(raw?.[category]) ? raw[category] : []) {
-      const name = String(value)
-        .trim()
-        .toLowerCase()
-        .replace(/^#+/, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (!name || seen.has(name)) continue;
-      seen.add(name);
-      out.push({ name, category });
-    }
-  }
-  return out;
-}
 
 /**
  * Analyze an uploaded image. Returns

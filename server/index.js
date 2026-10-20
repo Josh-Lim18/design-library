@@ -2,7 +2,7 @@ import './env.js'; // loads .env into process.env before anything reads it
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { ROOT_DIR, UPLOADS_DIR, JSON_PATH, listSections, listStyles } from './db.js';
+import { ROOT_DIR, UPLOADS_DIR, JSON_PATH, READ_ONLY, listSections, listStyles } from './db.js';
 import { writeMirror } from './mirror.js';
 import { aiTaggingAvailable } from './lib/analyze.js';
 import { items } from './routes/items.js';
@@ -13,9 +13,18 @@ const PORT = Number(process.env.PORT) || 3001;
 const DIST_DIR = path.join(ROOT_DIR, 'web', 'dist');
 
 // Ensure the text mirror exists on first run.
-if (!fs.existsSync(JSON_PATH)) writeMirror();
+if (!READ_ONLY && !fs.existsSync(JSON_PATH)) writeMirror();
 
 const app = express();
+
+if (READ_ONLY) {
+  app.use('/api', (req, res, next) =>
+    req.method === 'GET'
+      ? next()
+      : res.status(403).json({ error: 'This online copy is read-only. Make changes locally and redeploy.' })
+  );
+}
+
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -63,6 +72,11 @@ app.use((err, _req, res, _next) => {
   res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`design-library running at http://localhost:${PORT}`);
-});
+// On Vercel, api/index.js hands requests to the exported app instead.
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`design-library running at http://localhost:${PORT}`);
+  });
+}
+
+export default app;

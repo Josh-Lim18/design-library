@@ -40,13 +40,6 @@ function wantsAnalysis(value) {
   return !['false', '0', 'off', 'no'].includes(String(value).trim().toLowerCase());
 }
 
-/**
- * Run image analysis for a freshly created item and fold the results in: AI
- * tags (each with a subcategory) are unioned with whatever the user typed, the
- * AI description is used only when the user left that field blank, and each
- * generated tag's category is recorded. A failure here is logged and swallowed
- * — the item stays as it was created.
- */
 /** Fold an analysis result into an item: union tags, set categories + section,
  *  fill the description only if it is currently blank. Returns the updated item. */
 function foldAnalysis(item, ai, keepDescription) {
@@ -59,6 +52,10 @@ function foldAnalysis(item, ai, keepDescription) {
   return updated;
 }
 
+/**
+ * Analyze a freshly created item's image and fold the result in. A failure here
+ * is logged and swallowed — the item stays exactly as it was created.
+ */
 async function applyAnalysis(item, { userDescription }) {
   try {
     const ai = await analyzeImage(item.image_path);
