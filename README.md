@@ -3,10 +3,26 @@
 A personal, local, single-user web app for collecting and organizing UI/UX design
 references — uploaded screenshots and links to sites/Dribbble shots — organized by
 freeform **tags** with a short "what this pattern is" description on each item.
+Drop in a screenshot and Claude can describe it and tag it for you (typography,
+colour, layout, mood…), so you can find it later and paste the tags straight into
+prompts.
 
 The whole library (SQLite database **and** image files) lives inside this repo, so
 you can push it to GitHub and `git pull` it on another machine to get the same
 library.
+
+**Live demo (read-only):** <https://design-library-theta-seven.vercel.app>
+
+![Gallery — masonry grid with aesthetic and section filters and a tag sidebar](docs/screenshots/gallery.png)
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Filtering by the Editorial aesthetic](docs/screenshots/filter-aesthetic.png) | ![Item detail with AI-generated description and categorised tags](docs/screenshots/item-detail.png) |
+| **Filter** by aesthetic, section, tags and text — filters compose and live in the URL. | **Item detail** — description, aesthetic, section, and tags grouped by subcategory. |
+| ![Add a reference dialog](docs/screenshots/add-reference.png) | ![Manage tags dialog](docs/screenshots/manage-tags.png) |
+| **Add a reference** from an image or a URL, with optional AI auto-tagging. | **Manage tags** — rename, merge, re-file into a subcategory, or delete. |
 
 ## Setup
 
@@ -22,6 +38,12 @@ Then open <http://localhost:3001>.
 
 `npm start` builds the frontend and runs the server on one port. To change the
 port: `PORT=4000 npm start`.
+
+### Starting your own library
+
+This repo ships with my library in `data/` as sample content. To start empty,
+delete `data/library.db`, `data/library.json` and the files in `data/uploads/`
+— the server recreates a fresh database on its next start.
 
 ## AI auto-tagging (optional)
 
@@ -93,6 +115,11 @@ npm run dev
 Runs the API on `:3001` and the Vite dev server on `:5173` (with hot reload,
 proxying `/api` and `/uploads` to the API). Open <http://localhost:5173>.
 
+`npm test` runs the unit tests (Node's built-in runner, no dependencies) — they
+cover the pure pieces: the section/style/tag-category vocabularies and their
+input coercion (`server/lib/vocab.js`), and the tag grouping used by the
+sidebar and detail view (`web/src/categories.js`).
+
 ## How it stores data
 
 | Path | What | Committed? |
@@ -113,6 +140,23 @@ machines before syncing. If that happens, resolve the conflict in favour of eith
 ```bash
 npm run db:rebuild
 ```
+
+## Deploying a read-only copy (Vercel)
+
+The library can be published as a **read-only** site on Vercel so you can browse
+it from anywhere. `vercel.json` builds the frontend, copies `data/uploads/` into
+the static output, and routes `/api/*` to `api/index.js`, which wraps the same
+Express app. On Vercel (detected via the `VERCEL` env var) the database is opened
+read-only and any non-`GET` API request gets a `403` — Vercel's filesystem can't
+persist writes, so you keep editing locally and redeploy.
+
+```bash
+npm i -g vercel
+vercel deploy --prod
+```
+
+If the project is connected to the GitHub repo, every push to `main` redeploys —
+so commit `data/` along with your code.
 
 ## Features
 
@@ -135,6 +179,8 @@ npm run db:rebuild
 ## Project layout
 
 ```
+api/index.js       Vercel serverless entry (re-exports the Express app)
+vercel.json        Vercel build + routing for the read-only deployment
 server/            Express API + SQLite access
   index.js         app entry — serves the API and the built frontend
   db.js            schema, queries, JSON snapshot/rebuild
@@ -148,6 +194,7 @@ web/               React + Vite frontend
   src/components/  AddItemDialog, MasonryGrid, TagSidebar, SectionSidebar, TagManager, TagInput, Modal
   src/categories.js / sections.js / aesthetics.js  vocab lists (mirror server/db.js)
 data/              the library (see table above)
+docs/screenshots/  images used in this README
 ```
 
 ## API
@@ -168,3 +215,16 @@ data/              the library (see table above)
 | `GET` | `/api/sections` | sections in use, with item counts |
 | `GET` | `/api/styles` | aesthetic buckets in use, with item counts |
 | `GET` | `/api/health` | `{ ok, aiTagging }` — `aiTagging` is true when a tagging backend is available |
+
+## Contributing
+
+Issues and pull requests are welcome. Run `npm test` before opening a PR.
+
+## License
+
+The code is released under the [MIT License](LICENSE).
+
+The images in `data/uploads/` and `docs/screenshots/` are screenshots of
+third-party websites and artwork collected as design references. They remain
+the property of their respective owners and are **not** covered by the MIT
+License.
